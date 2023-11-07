@@ -5,7 +5,6 @@
 		constructor(source, flag, root = "root") {
 			this.table = new Map()
 			this.regexp = new RegExp(this.compileRegExp(source, root, 0).source, flag)
-
 		}
 
 		exec(str) {
@@ -52,15 +51,15 @@
 
 	}
 
-	function compileRegExp(xreg, literal) {
-		if (xreg[literal] instanceof RegExp)
-			return xreg[literal].source
-		let regexp = xreg[literal].replace(/\<([^>]+)\>/g, function (str, $1) {
-			return compileRegExp(xreg, $1)
-		});
+	// function compileRegExp(xreg, literal) {
+	// 	if (xreg[literal] instanceof RegExp)
+	// 		return xreg[literal].source
+	// 	let regexp = xreg[literal].replace(/\<([^>]+)\>/g, function (str, $1) {
+	// 		return compileRegExp(xreg, $1)
+	// 	});
 
-		return regexp;
-	}
+	// 	return regexp;
+	// }
 
 
 	// Keywords 一定在 Identifer 之前，因为 Identifer 可能包含关键字
