@@ -36,7 +36,13 @@ const syntaxMap = {
       ["MultiplicativeExpression", "/", "PrimaryExpression"],
     ],
     PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
-    Literal: [["Number"]],
+    Literal: [
+      ["NumericLiteral"] /*Number类型默认用于表示双精度浮点数*/,
+      ["StringLiteral"] /*JavaScript中的String类型使用UTF-16编码*/,
+      ["BooleanLiteral"],
+      ["NullLiteral"],
+      ["RegularExpression"],
+    ],
   },
   hash = {};
 
@@ -144,43 +150,98 @@ function parse(source) {
 
 const evaluator = {
   Program: function (node) {
-    return evaluat(node.children[0]);
+    return evaluate(node.children[0]);
   },
   StatementList: function (node) {
     switch (node.children.length) {
       case 1:
-        return evaluat(node.children[0]);
+        return evaluate(node.children[0]);
       default:
         // StatementList: [["Statement"], ["StatementList", "Statement"]],
         // 第二种情况就全部执行一下
-        evaluat(node.children[0]);
-        return evaluat(node.children[1]);
+        evaluate(node.children[0]);
+        return evaluate(node.children[1]);
     }
   },
   Statement: function (node) {
-    return evaluat(node.children[0]);
+    return evaluate(node.children[0]);
   },
   VariableDeclaration: function (node) {
     // debugger;
     // log(node) 获取表达式声明体
     console.log(node.children[1].name);
+  },
+  ExpressionStatement: function (node) {
+    return evaluate(node.children[0]);
+  },
+  Expression: function (node) {
+    return evaluate(node.children[0]);
+  },
+  AdditiveExpression: function (node) {
+    if (node.children.length == 1) return evaluate(node.children[0]);
+    else return evaluate(node.children[0]) + evaluate(node.children[2]);
+  },
+  MultiplicativeExpression: function (node) {
+    if (node.children.length == 1) return evaluate(node.children[0]);
+    else return evaluate(node.children[0]) * evaluate(node.children[2]);
+  },
+  PrimaryExpression: function (node) {
+    if (node.children.length == 1) return evaluate(node.children[0]);
+  },
+  Literal: function (node) {
+    return evaluate(node.children[0]);
+  },
+  NumericLiteral: function (node) {
+    let str = node.value,
+      len = str.length,
+      value = 0,
+      // 进制
+      n = 10;
 
-    return evaluat(node.children[1]);
+    if (str.match(/^0b/)) {
+      n = 2;
+      len -= 2;
+    } else if (str.match(/^0o/)) {
+      n = 8;
+      len -= 2;
+    } else if (str.match(/^0x/)) {
+      n = 16;
+      len -= 2;
+    }
+
+    while (len--) {
+      // 处理 16 进制
+      let char = str.charCodeAt(str.length - len - 1);
+      if (char >= "a".charCodeAt(0) && char <= "f".charCodeAt(0)) {
+        char = char - "a".charCodeAt(0) + 10;
+      } else if (char >= "A".charCodeAt(0) && char <= "F".charCodeAt(0)) {
+        char = char - "A".charCodeAt(0) + 10;
+      } else if (char >= "0".charCodeAt(0) && char <= "9".charCodeAt(0)) {
+        char -= "0".charCodeAt(0);
+      } else {
+        throw new Error("Invalid or unexpected token");
+      }
+
+      // 将数字字符转换为其对应的数字值
+      value = value * n + char;
+    }
+
+    console.log(value);
+    return Number(node.value);
   },
-  EOF: function () {
-    return null;
-  },
+  StringLiteral: function (node) {},
+  BooleanLiteral: function (node) {},
+  NullLiteral: function (node) {},
 };
 
 // 每一次去执行树中的某一个节点
-function evaluat(node) {
+function evaluate(node) {
   if (evaluator[node.type]) return evaluator[node.type](node);
 }
 
 /////////////////////////////
 const source = `
- var a;
- var b;
+    0b1011; 0o15; 0xA;
 `;
 let lexicalTree = parse(source);
-evaluat(lexicalTree);
+evaluate(lexicalTree);
