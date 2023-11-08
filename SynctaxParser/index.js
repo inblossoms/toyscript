@@ -1,3 +1,5 @@
+import { scan } from "../LexParser.js";
+
 let syntaxMap = {
   Program: [["StatementList", "EOF"]],
   StatementList: [["Statement"], ["StatementList", "Statement"]],
@@ -14,7 +16,9 @@ let syntaxMap = {
   ],
   VariableDeclaration: [
     // ["var", "Identifier", "=", "Expression", ";", "Statement"]
-    ["var", "Identifier"],
+    ["var", "Identifier", ";"],
+    ["let", "Identifier", ";"],
+    ["const", "Identifier", ";"],
   ],
   FunctionDeclaration: [
     ["function", "Identifier", "(", ")", "{", "StatementList", "}"],
@@ -37,18 +41,20 @@ let syntaxMap = {
 
 let hash = {};
 
+// 状态机
 function closure(state) {
   hash[JSON.stringify(state)] = state; // 在数据污染之前备份数据
   const queue = [];
 
   for (let symbol in state) {
+    if (symbol.match(/^\$/)) return; // 将 $reduceState 排除, 不做为普通的状态进行迁移
     queue.push(symbol); // 广度优先
   }
   // 提取每一个 symbol，根据 syntax 规则去进行展开 此时只处理了两层
   while (queue.length) {
     const symbol = queue.shift();
     const syntax = syntaxMap[symbol];
-    console.log(symbol);
+    // console.log(symbol);
 
     if (syntax) {
       for (let rule of syntax) {
@@ -60,7 +66,11 @@ function closure(state) {
           }
           current = current[part];
         }
-        current.$isRuleEnd = true;
+        // 在术语中用 reduce 来代指合并，reduce 有两个要素
+        // 1. 将不定个 non-terminal-symbol 合并，所以需要回退状态
+        // 2. 要 reduce 成一个什么样的 symbol
+        current.$reduceType = symbol;
+        current.$reduceState = state;
       }
     }
   }
@@ -84,4 +94,25 @@ const start = {
 };
 
 closure(start);
-console.log(start);
+// console.log(start);
+
+const source = `
+	let a;
+	a = 1;
+`;
+
+void (function parse(source) {
+  let state = start;
+  for (const iterator /* terminal symbols */ of scan(source)) {
+    if (iterator.type in state) {
+      state = state[iterator.type];
+    } else {
+      // reduce to non-terminal-symbol
+      // 生成新的 symbol
+      if (state.$reduceType) {
+        state = state.$reduceState;
+      }
+    }
+    console.log(iterator);
+  }
+})(source);
