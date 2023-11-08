@@ -44,7 +44,7 @@ function closure(state) {
   for (let symbol in state) {
     queue.push(symbol); // 广度优先
   }
-  // 提取每一个 symbol，根据 syntax 规则去进行展开
+  // 提取每一个 symbol，根据 syntax 规则去进行展开 此时只处理了两层
   while (queue.length) {
     const symbol = queue.shift();
     const syntax = syntaxMap[symbol];
