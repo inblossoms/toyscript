@@ -11,8 +11,7 @@
 			let reg = this.regexp.exec(str)
 			for (let i = 0, len = reg.length; i < len; i++) {
 				if (reg[i] !== void 0) {
-					// reg[i] = this.table.get(reg[i])
-					console.log(this.table.get(i));
+					reg[this.table.get(i - 1)] = reg[i];
 				}
 			}
 			return reg
