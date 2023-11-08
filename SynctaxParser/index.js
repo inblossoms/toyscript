@@ -53,11 +53,10 @@ function closure(state) {
   // 提取每一个 symbol，根据 syntax 规则去进行展开 此时只处理了两层
   while (queue.length) {
     const symbol = queue.shift();
-    const syntax = syntaxMap[symbol];
     // console.log(symbol);
 
-    if (syntax) {
-      for (let rule of syntax) {
+    if (syntaxMap[symbol]) {
+      for (let rule of syntaxMap[symbol]) {
         if (!state[rule[0]]) queue.push(rule[0]);
         let current = state;
         for (const part of rule) {
@@ -70,13 +69,15 @@ function closure(state) {
         // 1. 将不定个 non-terminal-symbol 合并，所以需要回退状态
         // 2. 要 reduce 成一个什么样的 symbol
         current.$reduceType = symbol;
-        current.$reduceState = state;
+        current.$reduceLength = rule.length;
       }
     }
   }
 
   //
   for (const symbol in state) {
+    if (symbol.match(/^\$/)) return;
+
     if (hash[JSON.stringify(state[symbol])]) {
       state[symbol] = hash[JSON.stringify(state[symbol])];
     } else {
@@ -97,22 +98,53 @@ closure(start);
 // console.log(start);
 
 const source = `
-	let a;
-	a = 1;
+	var a;
 `;
 
-void (function parse(source) {
-  let state = start;
-  for (const iterator /* terminal symbols */ of scan(source)) {
-    if (iterator.type in state) {
-      state = state[iterator.type];
+function parse(source) {
+  let stack = [start];
+  let symbolStack = [];
+
+  // 处理的是子元素
+  function reduce() {
+    let state = stack[stack.length - 1];
+
+    // 生成新的 _symbol
+    if (state.$reduceType) {
+      let children = [];
+      for (let i = 0; i < state.$reduceLength; i++) {
+        stack.pop();
+        children.push(symbolStack.pop());
+      }
+
+      // reduce to non-terminal-symbol and shift it
+      return {
+        type: state.$reduceType,
+        children: children.reverse(),
+      };
+    } else {
+      throw new Error("unexpected token");
+    }
+  }
+
+  function shift(symbol) {
+    let state = stack[stack.length - 1];
+    if (symbol && symbol.type in state) {
+      stack.push(state[symbol.type]); // 储存状态
+      symbolStack.push(symbol);
     } else {
       // reduce to non-terminal-symbol
-      // 生成新的 symbol
-      if (state.$reduceType) {
-        state = state.$reduceState;
-      }
+      // reduce 产生的新的 symbol 没有入栈，需要再次 shift
+      shift(reduce());
+      shift(symbol);
     }
-    console.log(iterator);
   }
-})(source);
+
+  for (let symbol /* terminal symbols */ of scan(source)) {
+    shift(symbol);
+    // console.log(symbol);
+  }
+  console.log(reduce());
+}
+
+parse(source);

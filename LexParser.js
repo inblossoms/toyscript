@@ -64,7 +64,7 @@ let regexp = new XRegExp(
     Punctuator:
       /\+|\:|\(|\=|\<|\+\+|>|\]|\[|\*|\)|\{|\}|\?|\,|\.|\;|\/|\'|\"|\=\=/,
     Keywords:
-      /let|const|var|break|case|catch|continue|debugger|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|var|void|while|with|yield/,
+      /let|const|var|break|case|catch|continue|debugger|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|function|void|while|with|yield/,
     Identifier: /[a-zA-Z_$][a-zA-Z0-9_$]*/,
   },
   "g",
