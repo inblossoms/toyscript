@@ -1,45 +1,44 @@
 import { scan } from "../LexParser.js";
 
-let syntaxMap = {
-  Program: [["StatementList", "EOF"]],
-  StatementList: [["Statement"], ["StatementList", "Statement"]],
-  Statement: [
-    ["ExpressionStatement"],
-    ["IfStatement"],
-    ["VariableDeclaration"],
-    ["FunctionDeclaration"],
-  ],
-  IfStatement: [
-    ["if", "(", "Expression", ")", "Statement"],
-    // ["else", "Statement"],
-    // ["else if", "(", "Expression", ")", "Statement"],
-  ],
-  VariableDeclaration: [
-    // ["var", "Identifier", "=", "Expression", ";", "Statement"]
-    ["var", "Identifier", ";"],
-    ["let", "Identifier", ";"],
-    ["const", "Identifier", ";"],
-  ],
-  FunctionDeclaration: [
-    ["function", "Identifier", "(", ")", "{", "StatementList", "}"],
-  ],
-  ExpressionStatement: [["Expression", ";"]],
-  Expression: [["AdditiveExpression"]],
-  AdditiveExpression: [
-    ["MultiplicativeExpression"],
-    ["AdditiveExpression", "+", "MultiplicativeExpression"],
-    ["AdditiveExpression", "-", "MultiplicativeExpression"],
-  ],
-  MultiplicativeExpression: [
-    ["PrimaryExpression"],
-    ["MultiplicativeExpression", "*", "PrimaryExpression"],
-    ["MultiplicativeExpression", "/", "PrimaryExpression"],
-  ],
-  PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
-  Literal: [["Number"]],
-};
-
-let hash = {};
+const syntaxMap = {
+    Program: [["StatementList", "EOF"]],
+    StatementList: [["Statement"], ["StatementList", "Statement"]],
+    Statement: [
+      ["ExpressionStatement"],
+      ["IfStatement"],
+      ["VariableDeclaration"],
+      ["FunctionDeclaration"],
+    ],
+    IfStatement: [
+      ["if", "(", "Expression", ")", "Statement"],
+      // ["else", "Statement"],
+      // ["else if", "(", "Expression", ")", "Statement"],
+    ],
+    VariableDeclaration: [
+      // ["var", "Identifier", "=", "Expression", ";", "Statement"]
+      ["var", "Identifier", ";"],
+      ["let", "Identifier", ";"],
+      ["const", "Identifier", ";"],
+    ],
+    FunctionDeclaration: [
+      ["function", "Identifier", "(", ")", "{", "StatementList", "}"],
+    ],
+    ExpressionStatement: [["Expression", ";"]],
+    Expression: [["AdditiveExpression"]],
+    AdditiveExpression: [
+      ["MultiplicativeExpression"],
+      ["AdditiveExpression", "+", "MultiplicativeExpression"],
+      ["AdditiveExpression", "-", "MultiplicativeExpression"],
+    ],
+    MultiplicativeExpression: [
+      ["PrimaryExpression"],
+      ["MultiplicativeExpression", "*", "PrimaryExpression"],
+      ["MultiplicativeExpression", "/", "PrimaryExpression"],
+    ],
+    PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
+    Literal: [["Number"]],
+  },
+  hash = {};
 
 // 状态机
 function closure(state) {
@@ -97,10 +96,6 @@ const start = {
 closure(start);
 // console.log(start);
 
-const source = `
-	var a;
-`;
-
 function parse(source) {
   let stack = [start];
   let symbolStack = [];
@@ -144,7 +139,48 @@ function parse(source) {
     shift(symbol);
     // console.log(symbol);
   }
-  console.log(reduce());
+  return reduce();
 }
 
-parse(source);
+const evaluator = {
+  Program: function (node) {
+    return evaluat(node.children[0]);
+  },
+  StatementList: function (node) {
+    switch (node.children.length) {
+      case 1:
+        return evaluat(node.children[0]);
+      default:
+        // StatementList: [["Statement"], ["StatementList", "Statement"]],
+        // 第二种情况就全部执行一下
+        evaluat(node.children[0]);
+        return evaluat(node.children[1]);
+    }
+  },
+  Statement: function (node) {
+    return evaluat(node.children[0]);
+  },
+  VariableDeclaration: function (node) {
+    // debugger;
+    // log(node) 获取表达式声明体
+    console.log(node.children[1].name);
+
+    return evaluat(node.children[1]);
+  },
+  EOF: function () {
+    return null;
+  },
+};
+
+// 每一次去执行树中的某一个节点
+function evaluat(node) {
+  if (evaluator[node.type]) return evaluator[node.type](node);
+}
+
+/////////////////////////////
+const source = `
+ var a;
+ var b;
+`;
+let lexicalTree = parse(source);
+evaluat(lexicalTree);
