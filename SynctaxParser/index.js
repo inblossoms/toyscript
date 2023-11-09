@@ -179,11 +179,11 @@ const evaluator = {
   },
   AdditiveExpression: function (node) {
     if (node.children.length == 1) return evaluate(node.children[0]);
-    else return evaluate(node.children[0]) + evaluate(node.children[2]);
+    // else return evaluate(node.children[0]) + evaluate(node.children[2]);
   },
   MultiplicativeExpression: function (node) {
     if (node.children.length == 1) return evaluate(node.children[0]);
-    else return evaluate(node.children[0]) * evaluate(node.children[2]);
+    // else return evaluate(node.children[0]) * evaluate(node.children[2]);
   },
   PrimaryExpression: function (node) {
     if (node.children.length == 1) return evaluate(node.children[0]);
@@ -229,7 +229,43 @@ const evaluator = {
     console.log(value);
     return Number(node.value);
   },
-  StringLiteral: function (node) {},
+  StringLiteral: function (node) {
+    const result = [];
+    console.log(node.value);
+
+    for (let i = 1, len = node.value.length - 1; i < len; i++) {
+      switch (node.value[i]) {
+        case "\\":
+          ++i;
+          const char = node.value[i],
+            escapeCharMap = {
+              // 默认处理 BMP 的字符集（0000 - ffff : 一个 utf-16 的资源）
+              n: String.fromCharCode(0x000a),
+              r: String.fromCharCode(0x000d),
+              t: String.fromCharCode(0x0009),
+              b: String.fromCharCode(0x0008),
+              f: String.fromCharCode(0x000c),
+              v: String.fromCharCode(0x000b),
+              0: String.fromCharCode(0x0000),
+              "\\": String.fromCharCode(0x005c),
+              "'": String.fromCharCode(0x0027),
+              '"': String.fromCharCode(0x0022),
+            };
+          if (char in escapeCharMap) {
+            result.push(escapeCharMap[char]);
+          } else {
+            result.push(char);
+          }
+          break;
+        default:
+          result.push(node.value[i]);
+          break;
+      }
+    }
+    console.log(result);
+
+    return result.join("");
+  },
   BooleanLiteral: function (node) {},
   NullLiteral: function (node) {},
 };
@@ -240,8 +276,13 @@ function evaluate(node) {
 }
 
 /////////////////////////////
+// window.jsc = {
+//   evaluate,
+//   parse,
+// };
+
 const source = `
-    0b1011; 0o15; 0xA;
+  0b110; 10; 'a\\nb\\tc\\fd';
 `;
 let lexicalTree = parse(source);
 evaluate(lexicalTree);

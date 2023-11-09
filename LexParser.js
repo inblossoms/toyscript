@@ -59,7 +59,7 @@ let regexp = new XRegExp(
     Literal: "<NumericLiteral>|<BooleanLiteral>|<StringLiteral>|<NullLiteral>",
     NumericLiteral:
       /0o[0-7]+|0x[0-9a-fA-F]+|0b[01]+|(?:[1-9][0-9]*|0)(?:\.[0-9]*)?|\.[0-9]+/,
-    StringLiteral: / |\"(?:[^"\n]|\\[\s\S])*\"|\'(?:[^'\n]|\\[\s\S])*\'/,
+    StringLiteral: /\"(?:[^"\n]|\\[\s\S])*\"|\'(?:[^'\n]|\\[\s\S])*\'/,
     BooleanLiteral: /true|false/,
     NullLiteral: /null/,
     Punctuator:
