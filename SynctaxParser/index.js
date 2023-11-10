@@ -53,14 +53,11 @@ const syntaxMap = {
     ],
     PropertyList: [
       ["Property"],
-      ["Property", ",", "PropertyList"],
+      ["PropertyList", ",", "Property"],
     ],
     Property: [
       ["StringLiteral", ":", "AdditiveExpression"],
       ["Identifier", ":", "AdditiveExpression"],
-      //   ["Identifier", ":", "AssignmentExpression"],
-      //   ["Identifier", ":", "AssignmentExpression", ","],
-      //   ["Identifier", ":", "AssignmentExpression", ",", "PropertyList"],
     ],
   },
   hash = {};
@@ -166,6 +163,38 @@ function parse(source) {
   }
   return reduce();
 }
+
+class Realm {
+  constructor() {
+    this.global = new Map()
+    this.Object = new Map()
+    this.Object_prototype = new Map()
+    this.Object.call = function(){}
+  }
+}
+
+class EnvironmentRecord {
+  constructor() {
+    this.thisValue
+    this.variables = new Map()
+    this.outer = null
+  }
+}
+
+
+// Js 将变量存储在 ExecutionContext 的上下文中
+class ExecutionContext {
+  constructor() {
+    this.lexicalEnvironment = Object.create(null);
+    this.variableEnvironment = Object.create(null);
+    this.realm = {
+      global: {},
+      Object: {},
+      Object_prototype : {}
+    }; // 存储 Global Object Object.prototype
+  }
+}
+
 
 const evaluator = {
   Program: function (node) {
@@ -294,6 +323,7 @@ const evaluator = {
     if (len === 3) {
       const object = new Map(); // Js 的对象本质就是两个东西：prototype property
       this.PropertyList(node.children[1], object);
+      // object.prototype =
       return object;
     }
   },
@@ -329,6 +359,14 @@ function evaluate(node) {
   if (evaluator[node.type]) return evaluator[node.type](node);
 }
 
+
+// 执行上下文中的数据状态 在函数调用的时候切换
+// 通过栈来管理 ExecutionContext 在存储函数调用的先后时机
+let ecs = [
+  new ExecutionContext
+],
+realm = new Realm()
+
 /////////////////////////////
 window.jsc = {
   evaluate,
@@ -337,7 +375,8 @@ window.jsc = {
 
 const source = `
 	0b1011; 'a\\nb'; {
-       a: 10
+       a: 10,
+       b: 20
     };
 `;
 let lexicalTree = parse(source);
