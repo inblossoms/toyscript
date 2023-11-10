@@ -1,4 +1,4 @@
-## Explore JavaScript
+## Language learning methodology
 
 toy-js will be based on our own custom semantics in the `Language.md`.
 

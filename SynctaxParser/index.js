@@ -42,6 +42,25 @@ const syntaxMap = {
       ["BooleanLiteral"],
       ["NullLiteral"],
       ["RegularExpression"],
+      [
+        "ObjectLiteral",
+      ] /*Javascript property 对行为和状态并没有一个明确的区分*/,
+      ["ArrayLiteral"],
+    ],
+    ObjectLiteral: [
+      ["{", "}"],
+      ["{", "PropertyList", "}"],
+    ],
+    PropertyList: [
+      ["Property"],
+      ["Property", ",", "PropertyList"],
+    ],
+    Property: [
+      ["StringLiteral", ":", "AdditiveExpression"],
+      ["Identifier", ":", "AdditiveExpression"],
+      //   ["Identifier", ":", "AssignmentExpression"],
+      //   ["Identifier", ":", "AssignmentExpression", ","],
+      //   ["Identifier", ":", "AssignmentExpression", ",", "PropertyList"],
     ],
   },
   hash = {};
@@ -109,7 +128,6 @@ function parse(source) {
   // 处理的是子元素
   function reduce() {
     let state = stack[stack.length - 1];
-
     // 生成新的 _symbol
     if (state.$reduceType) {
       let children = [];
@@ -124,6 +142,7 @@ function parse(source) {
         children: children.reverse(),
       };
     } else {
+      console.log(state);
       throw new Error("unexpected token");
     }
   }
@@ -178,15 +197,15 @@ const evaluator = {
     return evaluate(node.children[0]);
   },
   AdditiveExpression: function (node) {
-    if (node.children.length == 1) return evaluate(node.children[0]);
+    if (node.children.length === 1) return evaluate(node.children[0]);
     // else return evaluate(node.children[0]) + evaluate(node.children[2]);
   },
   MultiplicativeExpression: function (node) {
-    if (node.children.length == 1) return evaluate(node.children[0]);
+    if (node.children.length === 1) return evaluate(node.children[0]);
     // else return evaluate(node.children[0]) * evaluate(node.children[2]);
   },
   PrimaryExpression: function (node) {
-    if (node.children.length == 1) return evaluate(node.children[0]);
+    if (node.children.length === 1) return evaluate(node.children[0]);
   },
   Literal: function (node) {
     return evaluate(node.children[0]);
@@ -266,6 +285,41 @@ const evaluator = {
 
     return result.join("");
   },
+  ObjectLiteral: function (node) {
+    const len = node.children.length;
+    if (len === 2) {
+      console.log(node.children)
+      return {};
+    }
+    if (len === 3) {
+      const object = new Map(); // Js 的对象本质就是两个东西：prototype property
+      this.PropertyList(node.children[1], object);
+      return object;
+    }
+  },
+  PropertyList: function (node, object) {
+    if (node.children.length === 1) {
+      this.Property(node.children[0], object);
+    } else {
+      this.PropertyList(node.children[0], object);
+      this.Property(node.children[2], object);
+    }
+  },
+  Property: function (node, object) {
+    let name;
+    if(node.children[0].type === "Identifier"){
+      name = node.children[0].name;
+    }
+    else if(node.children[0].type === "StringLiteral"){
+      name = evaluate(node.children[0])
+    }
+    object.set(name, {
+      value:evaluate(node.children[2]),
+      writeable: true,
+      enumerable: true,
+      configurable: true,
+    })
+  },
   BooleanLiteral: function (node) {},
   NullLiteral: function (node) {},
 };
@@ -276,13 +330,15 @@ function evaluate(node) {
 }
 
 /////////////////////////////
-// window.jsc = {
-//   evaluate,
-//   parse,
-// };
+window.jsc = {
+  evaluate,
+  parse,
+};
 
 const source = `
-  0b110; 10; 'a\\nb\\tc\\fd';
+	0b1011; 'a\\nb'; {
+       a: 10
+    };
 `;
 let lexicalTree = parse(source);
 evaluate(lexicalTree);

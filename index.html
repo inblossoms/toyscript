@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 
 <script type="module" src="./SynctaxParser/index.js"></script>
-<input id="sourceInp"></input>
+<textarea id="sourceInp">
+	'ab\nc'
+</textarea>
 <button onclick="jsc.evaluate(jsc.parse(document.getElementById('sourceInp').value));">run</button>
