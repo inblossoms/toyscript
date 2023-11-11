@@ -14,9 +14,11 @@ class XRegExp {
     }
     return reg;
   }
+
   get lastIndex() {
     return this.regexp.lastIndexst;
   }
+
   set lastIndex(value) {
     this.regexp.lastIndex = value;
   }
@@ -49,7 +51,7 @@ class XRegExp {
 }
 
 // Keywords 一定在 Identifer 之前，因为 Identifer 可能包含关键字
-let regexp = new XRegExp(
+let reg = new XRegExp(
   {
     InputElement: "<Whitespace>|<LineTerminator>|<Comments>|<Token>",
     Whitespace: / /,
@@ -73,14 +75,9 @@ let regexp = new XRegExp(
 );
 
 export function* scan(str) {
-  //   console.log(regexp);
-  while (
-    regexp.regexp.lastIndex < str.length &&
-    regexp.regexp.lastIndex !== -1
-  ) {
-    let r = regexp.exec(str);
-
-    // console.log(r[0]);
+  reg.regexp.lastIndex = 0;
+  while (reg.regexp.lastIndex < str.length) {
+    let r = reg.exec(str);
 
     if (r.Whitespace) {
     } else if (r.LineTerminator) {
@@ -133,12 +130,3 @@ export function* scan(str) {
     type: "EOF",
   };
 }
-
-const source = `
-/*hello world*/
-const x = 1;
-for (let i = 0, len = 3; i < len; i++) {
- let doc = document.createElement("div")
- doc.innerText = 'lexer: ' + (i * 2) + ";"
- document.body.appendChild(doc)
-}`;
