@@ -52,9 +52,9 @@ class XRegExp {
 let regexp = new XRegExp(
   {
     InputElement: "<Whitespace>|<LineTerminator>|<Comments>|<Token>",
-    Whitespace: / |\t/,
-    LineTerminator: /\n|\r|\v/,
-    Comments: /\/\*(?:[^*]|\*[^\/])*\*\/|\/\/[^\n\r\v]*/,
+    Whitespace: / /,
+    LineTerminator: /\n/,
+    Comments: /\/\*(?:[^*]|\*[^\/])*\*\/|\/\/[^\n]*/,
     Token: "<Literal>|<Keywords>|<Identifier>|<Punctuator>",
     Literal: "<NumericLiteral>|<BooleanLiteral>|<StringLiteral>|<NullLiteral>",
     NumericLiteral:
@@ -63,9 +63,9 @@ let regexp = new XRegExp(
     BooleanLiteral: /true|false/,
     NullLiteral: /null/,
     Punctuator:
-      /\+|\:|\(|\=|\<|\+\+|>|\]|\[|\*|\)|\{|\}|\?|\,|\.|\;|\/|\'|\"|\=\=/,
+      /\|\||\&\&|\=\=|\=\>|\+\+|\-\-|\-|\+|\:|\(|\=|\<|\>|\]|\[|\*|\)|\{|\}|\?|\.|;|\/|\'|\"/,
     Keywords:
-      /let|const|var|break|case|catch|continue|debugger|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|function|void|while|with|yield/,
+      /let|const|var|break|case|catch|continue|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|void|while|with|yield/,
     Identifier: /[a-zA-Z_$][a-zA-Z0-9_$]*/,
   },
   "g",

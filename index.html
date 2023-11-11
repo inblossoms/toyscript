@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 
-<script type="module" src="./SynctaxParser/index.js"></script>
 <textarea id="sourceInp">
 	'ab\nc'
 </textarea>
-<button onclick="jsc.evaluate(jsc.parse(document.getElementById('sourceInp').value));">run</button>
+<button id='btn'>run</button>
+<script type='module'>
+  import { evaluate, parse  } from './SynctaxParser/index.js'
+  document.getElementById('btn').addEventListener('click', ()=>{
+    console.log(
+        evaluate(
+            parse(document.getElementById('sourceInp').value)
+        )
+    )
+  })
+</script>
