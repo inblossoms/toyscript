@@ -7,34 +7,59 @@ const syntaxMap = {
       ["ExpressionStatement"],
       ["IfStatement"],
       ["VariableDeclaration"],
-      ["FunctionDeclaration"],
+      ["FunctionDeclaration"]
     ],
     IfStatement: [
-      ["if", "(", "Expression", ")", "Statement"],
-      // ["else", "Statement"],
-      // ["else if", "(", "Expression", ")", "Statement"],
+      ["if", "(", "Expression", ")", "Statement"]
     ],
     VariableDeclaration: [
-      // ["var", "Identifier", "=", "Expression", ";", "Statement"]
       ["var", "Identifier", ";"],
       ["let", "Identifier", ";"],
-      ["const", "Identifier", ";"],
     ],
     FunctionDeclaration: [
       ["function", "Identifier", "(", ")", "{", "StatementList", "}"],
     ],
     ExpressionStatement: [["Expression", ";"]],
-    Expression: [["AdditiveExpression"]],
+    Expression: [["AssignmentExpression"]],
+    AssignmentExpression: [
+      ["LeftHandSideExpression", "=", "LogicalORExpression"],
+      ["LogicalORExpression"]
+    ],
+    LogicalORExpression:[
+      ["LogicalANDExpression"],
+      ["LogicalORExpression", "||", "LogicalANDExpression"]
+    ],
+    LogicalANDExpression:[
+      ["AdditiveExpression"],
+      ["LogicalANDExpression", "&&", "AdditiveExpression"]
+    ],
     AdditiveExpression: [
       ["MultiplicativeExpression"],
       ["AdditiveExpression", "+", "MultiplicativeExpression"],
-      ["AdditiveExpression", "-", "MultiplicativeExpression"],
+      ["AdditiveExpression", "-", "MultiplicativeExpression"]
     ],
     MultiplicativeExpression: [
-      ["PrimaryExpression"],
-      ["MultiplicativeExpression", "*", "PrimaryExpression"],
-      ["MultiplicativeExpression", "/", "PrimaryExpression"],
+      ["LeftHandSideExpression"],
+      ["MultiplicativeExpression", "*", "LeftHandSideExpression"],
+      ["MultiplicativeExpression", "/", "LeftHandSideExpression"]
     ],
+    MemberExpression: [
+      ["PrimaryExpression"],
+      ["PrimaryExpression", ".", "Identifier"],
+      ["PrimaryExpression", "[", "Expression", "]"]
+    ], /* new fn()() || new fn().a() 需要额外注意的是这里的优先级 */
+    LeftHandSideExpression: [
+      ["CallExpression"],
+      ["NewExpression"]
+    ],
+    CallExpression: [
+      ["MemberExpression", "Arguments"],
+      ["CallExpression", "Arguments"]
+    ], /* new fn() */
+    NewExpression: [
+      ["MemberExpression"],
+      ["new", "NewExpression"]
+    ], /* new fn */
     PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
     Literal: [
       ["NumericLiteral"] /*Number类型默认用于表示双精度浮点数*/,
@@ -42,22 +67,20 @@ const syntaxMap = {
       ["BooleanLiteral"],
       ["NullLiteral"],
       ["RegularExpression"],
-      [
-        "ObjectLiteral",
-      ] /*Javascript property 对行为和状态并没有一个明确的区分*/,
-      ["ArrayLiteral"],
+      ["ObjectLiteral"] /*Javascript property 对行为和状态并没有一个明确的区分*/,
+      ["ArrayLiteral"]
     ],
     ObjectLiteral: [
       ["{", "}"],
-      ["{", "PropertyList", "}"],
+      ["{", "PropertyList", "}"]
     ],
     PropertyList: [
       ["Property"],
-      ["PropertyList", ",", "Property"],
+      ["PropertyList", ",", "Property"]
     ],
     Property: [
       ["StringLiteral", ":", "AdditiveExpression"],
-      ["Identifier", ":", "AdditiveExpression"],
+      ["Identifier", ":", "AdditiveExpression"]
     ],
   },
   hash = {};
@@ -68,7 +91,7 @@ function closure(state) {
   const queue = [];
 
   for (let symbol in state) {
-    if (symbol.match(/^\$/)) return; // 将 $reduceState 排除, 不做为普通的状态进行迁移
+    if (symbol.match(/^\$/)) continue; // 将 $reduceState 排除, 不做为普通的状态进行迁移
     queue.push(symbol); // 广度优先
   }
   // 提取每一个 symbol，根据 syntax 规则去进行展开 此时只处理了两层
@@ -97,7 +120,7 @@ function closure(state) {
 
   //
   for (const symbol in state) {
-    if (symbol.match(/^\$/)) return;
+    if (symbol.match(/^\$/)) continue;
 
     if (hash[JSON.stringify(state[symbol])]) {
       state[symbol] = hash[JSON.stringify(state[symbol])];
@@ -118,10 +141,11 @@ const start = {
 closure(start);
 // console.log(start);
 
-function parse(source) {
+export function parse(source) {
   let stack = [start];
   let symbolStack = [];
 
+  console.log(source)
   // 处理的是子元素
   function reduce() {
     let state = stack[stack.length - 1];
@@ -181,20 +205,29 @@ class EnvironmentRecord {
   }
 }
 
-
 // Js 将变量存储在 ExecutionContext 的上下文中
 class ExecutionContext {
   constructor() {
-    this.lexicalEnvironment = Object.create(null);
-    this.variableEnvironment = Object.create(null);
-    this.realm = {
-      global: {},
-      Object: {},
-      Object_prototype : {}
-    }; // 存储 Global Object Object.prototype
+    this.lexicalEnvironment = {};
+    this.variableEnvironment = this.lexicalEnvironment;
+    this.realm = {}; // 存储 Global Object Object.prototype
   }
 }
 
+// Js 运行时机制：所有的对象属性的访问都涉及到 reference（运行时类型）
+// 将变量名 上下文 值 通过一个对象进行存储
+class Reference {
+  constructor(object, property) {
+    this.object = object;
+    this.property = property
+  }
+  set(value){
+    this.object[this.property] = value
+  }
+  get(){
+    return this.object[this.property]
+  }
+}
 
 const evaluator = {
   Program: function (node) {
@@ -215,9 +248,10 @@ const evaluator = {
     return evaluate(node.children[0]);
   },
   VariableDeclaration: function (node) {
-    // debugger;
+    debugger;
     // log(node) 获取表达式声明体
-    console.log(node.children[1].name);
+    let runningEC = ecs[ecs.length - 1] // 取栈顶
+    return runningEC.variableEnvironment[node.children[1].name]
   },
   ExpressionStatement: function (node) {
     return evaluate(node.children[0]);
@@ -317,7 +351,6 @@ const evaluator = {
   ObjectLiteral: function (node) {
     const len = node.children.length;
     if (len === 2) {
-      console.log(node.children)
       return {};
     }
     if (len === 3) {
@@ -344,40 +377,55 @@ const evaluator = {
       name = evaluate(node.children[0])
     }
     object.set(name, {
-      value:evaluate(node.children[2]),
+      value: evaluate(node.children[2]),
       writeable: true,
       enumerable: true,
-      configurable: true,
+      configurable: true
     })
+  },
+  AssignmentExpression:function (node){
+    if (node.children.length === 1){
+      return evaluate(node.children[0])
+    }
+    // 先执行左边的表达式，然后执行右边的表达式，最后将右边的值赋值给左边的变量
+    let left = evaluate(node.children[0])
+    let right = evaluate(node.children[2])
+    left.set(right)
+  },
+  Identifier: function (node) {
+    // 将变量存储到 ExecutionContext
+    let runningEC = ecs[ecs.length - 1] // 取栈顶
+    return new Reference(
+      runningEC.lexicalEnvironment,
+      node.name
+    )
   },
   BooleanLiteral: function (node) {},
   NullLiteral: function (node) {},
 };
 
+let realm = new Realm()
+// 执行上下文中的数据状态 在函数调用的时候切换
+// 通过栈来管理 ExecutionContext 在存储函数调用的先后时机
+let ecs = [new ExecutionContext]
+
+
 // 每一次去执行树中的某一个节点
-function evaluate(node) {
-  if (evaluator[node.type]) return evaluator[node.type](node);
+export function evaluate(node) {
+  if (evaluator[node.type]){
+    let r =  evaluator[node.type](node);
+    console.log(r)
+    return r
+  }
 }
 
 
-// 执行上下文中的数据状态 在函数调用的时候切换
-// 通过栈来管理 ExecutionContext 在存储函数调用的先后时机
-let ecs = [
-  new ExecutionContext
-],
-realm = new Realm()
 
 /////////////////////////////
-window.jsc = {
-  evaluate,
-  parse,
-};
 
 const source = `
-	0b1011; 'a\\nb'; {
-       a: 10,
-       b: 20
-    };
+  a;
+  a = 1;
 `;
 let lexicalTree = parse(source);
 evaluate(lexicalTree);
