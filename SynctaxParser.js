@@ -7,11 +7,9 @@ const syntaxMap = {
       ["ExpressionStatement"],
       ["IfStatement"],
       ["VariableDeclaration"],
-      ["FunctionDeclaration"]
+      ["FunctionDeclaration"],
     ],
-    IfStatement: [
-      ["if", "(", "Expression", ")", "Statement"]
-    ],
+    IfStatement: [["if", "(", "Expression", ")", "Statement"]],
     VariableDeclaration: [
       ["var", "Identifier", ";"],
       ["let", "Identifier", ";"],
@@ -23,43 +21,40 @@ const syntaxMap = {
     Expression: [["AssignmentExpression"]],
     AssignmentExpression: [
       ["LeftHandSideExpression", "=", "LogicalORExpression"],
-      ["LogicalORExpression"]
+      ["LogicalORExpression"],
     ],
-    LogicalORExpression:[
+    LogicalORExpression: [
       ["LogicalANDExpression"],
-      ["LogicalORExpression", "||", "LogicalANDExpression"]
+      ["LogicalORExpression", "||", "LogicalANDExpression"],
     ],
-    LogicalANDExpression:[
+    LogicalANDExpression: [
       ["AdditiveExpression"],
-      ["LogicalANDExpression", "&&", "AdditiveExpression"]
+      ["LogicalANDExpression", "&&", "AdditiveExpression"],
     ],
     AdditiveExpression: [
       ["MultiplicativeExpression"],
       ["AdditiveExpression", "+", "MultiplicativeExpression"],
-      ["AdditiveExpression", "-", "MultiplicativeExpression"]
+      ["AdditiveExpression", "-", "MultiplicativeExpression"],
     ],
     MultiplicativeExpression: [
       ["LeftHandSideExpression"],
       ["MultiplicativeExpression", "*", "LeftHandSideExpression"],
-      ["MultiplicativeExpression", "/", "LeftHandSideExpression"]
+      ["MultiplicativeExpression", "/", "LeftHandSideExpression"],
     ],
     MemberExpression: [
       ["PrimaryExpression"],
       ["PrimaryExpression", ".", "Identifier"],
-      ["PrimaryExpression", "[", "Expression", "]"]
-    ], /* new fn()() || new fn().a() 需要额外注意的是这里的优先级 */
-    LeftHandSideExpression: [
-      ["CallExpression"],
-      ["NewExpression"]
-    ],
+      ["PrimaryExpression", "[", "Expression", "]"],
+    ] /* new fn()() || new fn().a() 需要额外注意的是这里的优先级 */,
+    LeftHandSideExpression: [["CallExpression"], ["NewExpression"]],
     CallExpression: [
       ["MemberExpression", "Arguments"],
-      ["CallExpression", "Arguments"]
-    ], /* new fn() */
+      ["CallExpression", "Arguments"],
+    ] /* new fn() */,
     NewExpression: [
       ["MemberExpression"],
-      ["new", "NewExpression"]
-    ], /* new fn */
+      ["new", "NewExpression"],
+    ] /* new fn */,
     PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
     Literal: [
       ["NumericLiteral"] /*Number类型默认用于表示双精度浮点数*/,
@@ -67,20 +62,19 @@ const syntaxMap = {
       ["BooleanLiteral"],
       ["NullLiteral"],
       ["RegularExpression"],
-      ["ObjectLiteral"] /*Javascript property 对行为和状态并没有一个明确的区分*/,
-      ["ArrayLiteral"]
+      [
+        "ObjectLiteral",
+      ] /*Javascript property 对行为和状态并没有一个明确的区分*/,
+      ["ArrayLiteral"],
     ],
     ObjectLiteral: [
       ["{", "}"],
-      ["{", "PropertyList", "}"]
+      ["{", "PropertyList", "}"],
     ],
-    PropertyList: [
-      ["Property"],
-      ["PropertyList", ",", "Property"]
-    ],
+    PropertyList: [["Property"], ["PropertyList", ",", "Property"]],
     Property: [
       ["StringLiteral", ":", "AdditiveExpression"],
-      ["Identifier", ":", "AdditiveExpression"]
+      ["Identifier", ":", "AdditiveExpression"],
     ],
   },
   hash = {};
@@ -145,7 +139,6 @@ export function parse(source) {
   let stack = [start];
   let symbolStack = [];
 
-  // console.log(source)
   // 处理的是子元素
   function reduce() {
     let state = stack[stack.length - 1];
@@ -187,10 +180,3 @@ export function parse(source) {
   }
   return reduce();
 }
-
-/////////////////////////////
-// const source = `
-//   new A;
-// `;
-// let lexicalTree = parse(source);
-// evaluate(lexicalTree);
