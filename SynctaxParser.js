@@ -6,10 +6,16 @@ const syntaxMap = {
     Statement: [
       ["ExpressionStatement"],
       ["IfStatement"],
+      ["WhileStatement"],
       ["VariableDeclaration"],
       ["FunctionDeclaration"],
     ],
-    IfStatement: [["if", "(", "Expression", ")", "Statement"]],
+    IfStatement: [
+      ["if", "(", "Expression", ")", "Statement"]
+    ],
+    WhileStatement: [
+      ["while", "(", "Expression", ")", "Statement"]
+    ],
     VariableDeclaration: [
       ["var", "Identifier", ";"],
       ["let", "Identifier", ";"],

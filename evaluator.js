@@ -62,6 +62,23 @@ export class Evaluator {
     }
   }
 
+  WhileStatement(node){
+    while(true){
+      let condition = this.evaluate(node.children[2]);
+      if(condition.property === "undefined"){
+        return new JsUndefined().toBoolean();
+      }
+      if(condition instanceof  Reference){
+        condition = condition.get()
+      }
+      if(condition.toBoolean().value){
+         this.evaluate(node.children[4])
+      } else {
+        break;
+      }
+    }
+  }
+
   VariableDeclaration(node) {
     // log(node) 获取表达式声明体
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
@@ -88,7 +105,7 @@ export class Evaluator {
          return left + right;
        }
        if(node.children[1].type === "-"){
-         return left - right;
+         return new JsNumber(left.value - right.value);
        }
     }
   }
