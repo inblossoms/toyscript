@@ -51,7 +51,7 @@ export class Evaluator {
 
   IfStatement(node){
     let condition = this.evaluate(node.children[2]);
-    if(condition.property === "undefined"){
+    if(condition.property === "undefined" || condition.property === "NaN"){
       return new JsUndefined().toBoolean();
     }
     if(condition instanceof  Reference){
@@ -65,7 +65,7 @@ export class Evaluator {
   WhileStatement(node){
     while(true){
       let condition = this.evaluate(node.children[2]);
-      if(condition.property === "undefined"){
+      if(condition.property === "undefined" || condition.property === "NaN"){
         return new JsUndefined().toBoolean();
       }
       if(condition instanceof  Reference){
