@@ -3,7 +3,14 @@ import {
   ExecutionContext,
   EnvironmentRecord,
   Realm,
-} from "./runtime.js";
+  JsObject,
+  JsSymbol,
+  JsNull,
+  JsUndefined,
+  JsNumber,
+  JsString,
+  JsBoolean
+} from './runtime.js';
 
 export class Evaluator {
   constructor() {
@@ -42,10 +49,23 @@ export class Evaluator {
     return this.evaluate(node.children[0]);
   }
 
+  IfStatement(node){
+    let condition = this.evaluate(node.children[2]);
+    if(condition.property === "undefined"){
+      return new JsUndefined().toBoolean();
+    }
+    if(condition instanceof  Reference){
+      condition = condition.get()
+    }
+    if(condition.toBoolean().value){
+      return this.evaluate(node.children[4])
+    }
+  }
+
   VariableDeclaration(node) {
     // log(node) 获取表达式声明体
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
-    return runningEC.variableEnvironment[node.children[1].name];
+    return runningEC.variableEnvironment[node.children[1].name] = new JsUndefined();
   }
 
   ExpressionStatement(node) {
@@ -58,12 +78,36 @@ export class Evaluator {
 
   AdditiveExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    // else return  this.evaluate(node.children[0]) +  this.evaluate(node.children[2]);
+    else  {
+      let left = this.evaluate(node.children[0]),
+       right = this.evaluate(node.children[2]);
+      if(left instanceof Reference) left = left.get();
+      if(right instanceof Reference) right = left.get();
+
+       if(node.children[1].type === "+"){
+         return left + right;
+       }
+       if(node.children[1].type === "-"){
+         return left - right;
+       }
+    }
   }
 
   MultiplicativeExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    // else return  this.evaluate(node.children[0]) *  this.evaluate(node.children[2]);
+    else  {
+      let left = this.evaluate(node.children[0]),
+        right = this.evaluate(node.children[2]);
+      if(left instanceof Reference) left = left.get();
+      if(right instanceof Reference) right = left.get();
+
+      if(node.children[1].type === "*"){
+        return left * right;
+      }
+      // if(node.children[1].type === "\"){
+      //   return left \ right;
+      // }
+    }
   }
 
   PrimaryExpression(node) {
@@ -73,7 +117,6 @@ export class Evaluator {
   Literal(node) {
     return this.evaluate(node.children[0]);
   }
-
   NumericLiteral(node) {
     let str = node.value,
       len = str.length,
@@ -108,9 +151,8 @@ export class Evaluator {
       value = value * n + char;
     }
 
-    return Number(node.value);
+    return new JsNumber(node.value)
   }
-
   StringLiteral(node) {
     const result = [];
     console.log(node.value);
@@ -144,24 +186,21 @@ export class Evaluator {
           break;
       }
     }
-    console.log(result);
-
-    return result.join("");
+    // console.log(result);
+    return new JsString(result);
   }
-
   ObjectLiteral(node) {
     const len = node.children.length;
     if (len === 2) {
       return {};
     }
     if (len === 3) {
-      const object = new Map(); // Js 的对象本质就是两个东西：prototype property
+      const object = new JsObject(); // Js 的对象本质就是两个东西：prototype property
       this.PropertyList(node.children[1], object);
       // object.prototype =
       return object;
     }
   }
-
   PropertyList(node, object) {
     if (node.children.length === 1) {
       this.Property(node.children[0], object);
@@ -170,7 +209,6 @@ export class Evaluator {
       this.Property(node.children[2], object);
     }
   }
-
   Property(node, object) {
     let name;
     if (node.children[0].type === "Identifier") {
@@ -185,7 +223,6 @@ export class Evaluator {
       configurable: true,
     });
   }
-
   AssignmentExpression(node) {
     if (node.children.length === 1) {
       return this.evaluate(node.children[0]);
@@ -195,21 +232,18 @@ export class Evaluator {
     let right = this.evaluate(node.children[2]);
     left.set(right);
   }
-
   LogicalORExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
     const res = this.evaluate(node.children[0]);
     if (res) return res;
     return this.evaluate(node.children[2]);
   }
-
   LogicalANDExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
     const res = this.evaluate(node.children[0]);
     if (!res) return res;
     return this.evaluate(node.children[2]);
   }
-
   LeftHandSideExpression(node) {
     return this.evaluate(node.children[0]);
   }
@@ -263,14 +297,24 @@ export class Evaluator {
       if ("get" in prop) return prop.get.call(result)
     }
   }
-
   Identifier(node) {
     // 将变量存储到 ExecutionContext
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
     return new Reference(runningEC.lexicalEnvironment, node.name);
   }
+  BooleanLiteral(node){
+    if(node.value === "true"){
+      return new JsBoolean(true)
+    }
+    else if(node.value === "false"){
+      return new JsBoolean(false)
+    }
+  }
 
-  BooleanLiteral(node) {}
-
-  NullLiteral(node) {}
+  NullLiteral(node){
+    debugger
+    if(typeof node.value === "object") {
+      return new JsNull()
+    }
+  }
 }
