@@ -1,100 +1,115 @@
-import { scan } from "./LexParser.js";
+import {scan} from './LexParser.js';
 
 const syntaxMap = {
-    Program: [["StatementList", "EOF"]],
-    StatementList: [["Statement"], ["StatementList", "Statement"]],
+    Program: [['StatementList', 'EOF']],
+    StatementList: [['Statement'], ['StatementList', 'Statement']],
     Statement: [
-      ["ExpressionStatement"],
-      ["IfStatement"],
-      ["WhileStatement"],
-      ["VariableDeclaration"],
-      ["FunctionDeclaration"],
-      ["BlockStatement"],
-      ["BreakStatement"],
-      ["ContinueStatement"]
+      ['ExpressionStatement'],
+      ['IfStatement'],
+      ['WhileStatement'],
+      ['VariableDeclaration'],
+      ['FunctionDeclaration'],
+      ['BlockStatement'],
+      ['BreakStatement'],
+      ['ContinueStatement']
     ],
     BreakStatement: [
-      ["break", ";"]
+      ['break', ';']
     ],
     ContinueStatement: [
-      ["continue", ";"]
+      ['continue', ';']
     ],
     BlockStatement: [
-      ["{", "StatementList", "}"],
-      ["{", "}"]
+      ['{', 'StatementList', '}'],
+      ['{', '}']
     ],
     IfStatement: [
-      ["if", "(", "Expression", ")", "Statement"]
+      ['if', '(', 'Expression', ')', 'Statement']
     ],
     WhileStatement: [
-      ["while", "(", "Expression", ")", "Statement"]
+      ['while', '(', 'Expression', ')', 'Statement']
     ],
     VariableDeclaration: [
-      ["var", "Identifier", ";"],
-      ["let", "Identifier", ";"],
+      ['var', 'Identifier', ';'],
+      ['let', 'Identifier', ';']
     ],
     FunctionDeclaration: [
-      ["function", "Identifier", "(", ")", "{", "StatementList", "}"],
+      ['function', 'Identifier', '(', ')', '{', 'StatementList', '}']
     ],
-    ExpressionStatement: [["Expression", ";"]],
-    Expression: [["AssignmentExpression"]],
+    ExpressionStatement: [['Expression', ';']],
+    Expression: [['AssignmentExpression']],
     AssignmentExpression: [
-      ["LeftHandSideExpression", "=", "LogicalORExpression"],
-      ["LogicalORExpression"],
+      ['LeftHandSideExpression', '=', 'LogicalORExpression'],
+      ['LogicalORExpression']
     ],
     LogicalORExpression: [
-      ["LogicalANDExpression"],
-      ["LogicalORExpression", "||", "LogicalANDExpression"],
+      ['LogicalANDExpression'],
+      ['LogicalORExpression', '||', 'LogicalANDExpression']
     ],
     LogicalANDExpression: [
-      ["AdditiveExpression"],
-      ["LogicalANDExpression", "&&", "AdditiveExpression"],
+      ['AdditiveExpression'],
+      ['LogicalANDExpression', '&&', 'AdditiveExpression']
     ],
     AdditiveExpression: [
-      ["MultiplicativeExpression"],
-      ["AdditiveExpression", "+", "MultiplicativeExpression"],
-      ["AdditiveExpression", "-", "MultiplicativeExpression"],
+      ['MultiplicativeExpression'],
+      ['AdditiveExpression', '+', 'MultiplicativeExpression'],
+      ['AdditiveExpression', '-', 'MultiplicativeExpression']
     ],
     MultiplicativeExpression: [
-      ["LeftHandSideExpression"],
-      ["MultiplicativeExpression", "*", "LeftHandSideExpression"],
-      ["MultiplicativeExpression", "/", "LeftHandSideExpression"],
+      ['LeftHandSideExpression'],
+      ['MultiplicativeExpression', '*', 'LeftHandSideExpression'],
+      ['MultiplicativeExpression', '/', 'LeftHandSideExpression']
     ],
     MemberExpression: [
-      ["PrimaryExpression"],
-      ["PrimaryExpression", ".", "Identifier"],
-      ["PrimaryExpression", "[", "Expression", "]"],
+      ['PrimaryExpression'],
+      ['PrimaryExpression', '.', 'Identifier'],
+      ['PrimaryExpression', '[', 'Expression', ']']
     ] /* new fn()() || new fn().a() 需要额外注意的是这里的优先级 */,
-    LeftHandSideExpression: [["CallExpression"], ["NewExpression"]],
+    LeftHandSideExpression: [
+      ['CallExpression'],
+      ['NewExpression']
+    ],
     CallExpression: [
-      ["MemberExpression", "Arguments"],
-      ["CallExpression", "Arguments"],
+      ['MemberExpression', 'Arguments'],
+      ['CallExpression', 'Arguments']
     ] /* new fn() */,
+    Arguments: [
+      ['(', ')'],
+      ['(', 'ArgumentList', ')']
+    ],
+    ArgumentList: [
+      ['AssignmentExpression'],
+      ['ArgumentList', ',', 'AssignmentExpression']
+    ],
     NewExpression: [
-      ["MemberExpression"],
-      ["new", "NewExpression"],
+      ['MemberExpression'],
+      ['new', 'NewExpression']
     ] /* new fn */,
-    PrimaryExpression: [["(", "Expression", ")"], ["Literal"], ["Identifier"]],
+    PrimaryExpression: [
+      ['(', 'Expression', ')'],
+      ['Literal'],
+      ['Identifier']
+    ],
     Literal: [
-      ["NumericLiteral"] /*Number类型默认用于表示双精度浮点数*/,
-      ["StringLiteral"] /*JavaScript中的String类型使用UTF-16编码*/,
-      ["BooleanLiteral"],
-      ["NullLiteral"],
-      ["RegularExpression"],
+      ['NumericLiteral'] /*Number类型默认用于表示双精度浮点数*/,
+      ['StringLiteral'] /*JavaScript中的String类型使用UTF-16编码*/,
+      ['BooleanLiteral'],
+      ['NullLiteral'],
+      ['RegularExpression'],
       [
-        "ObjectLiteral",
+        'ObjectLiteral'
       ] /*Javascript property 对行为和状态并没有一个明确的区分*/,
-      ["ArrayLiteral"],
+      ['ArrayLiteral']
     ],
     ObjectLiteral: [
-      ["{", "}"],
-      ["{", "PropertyList", "}"],
+      ['{', '}'],
+      ['{', 'PropertyList', '}']
     ],
-    PropertyList: [["Property"], ["PropertyList", ",", "Property"]],
+    PropertyList: [['Property'], ['PropertyList', ',', 'Property']],
     Property: [
-      ["StringLiteral", ":", "AdditiveExpression"],
-      ["Identifier", ":", "AdditiveExpression"],
-    ],
+      ['StringLiteral', ':', 'AdditiveExpression'],
+      ['Identifier', ':', 'AdditiveExpression']
+    ]
   },
   hash = {};
 
@@ -145,13 +160,14 @@ function closure(state) {
 
 // 如果把语法的分析过程看做一个状态迁移的过程 就是从 start 到 end 的过程
 const end = {
-  $isEnd: true,
+  $isEnd: true
 };
 const start = {
-  Program: end,
+  Program: end
 };
 
 closure(start);
+
 // console.log(start);
 
 export function parse(source) {
@@ -172,11 +188,11 @@ export function parse(source) {
       // reduce to non-terminal-symbol and shift it
       return {
         type: state.$reduceType,
-        children: children.reverse(),
+        children: children.reverse()
       };
     } else {
       console.log(state);
-      throw new Error("unexpected token");
+      throw new Error('unexpected token');
     }
   }
 

@@ -25,6 +25,14 @@ export class Evaluator {
       new ObjectEnvironmentRecord(this.globalObject),
       new ObjectEnvironmentRecord(this.globalObject)
     )];
+    this.log()
+  }
+
+  log() {
+    this.globalObject.set('log', new JsObject());
+    this.globalObject.get('log').call = args => {
+      console.log(args);
+    };
   }
 
   evaluate(node) {
@@ -331,9 +339,11 @@ export class Evaluator {
     }
     if (node.children.length === 2) {
       let _function = this.evaluate(node.children[0]),
-        _arguments = this.evaluate(node.children[1])
-
-      return _function.call()
+        _arguments = this.evaluate(node.children[1]);
+      if(_function instanceof Reference){
+        _function = _function.get();
+      }
+      return _function.call(_arguments)
     }
     /*
     * let object = this.realm.Object.constructor(),
@@ -362,6 +372,30 @@ export class Evaluator {
     // 将变量存储到 ExecutionContext
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
     return new Reference(runningEC.lexicalEnvironment, node.name);
+  }
+
+  Arguments(node) {
+    if (node.children.length === 2) {
+      return [];
+    } else {
+      return this.evaluate(node.children[1]);
+    }
+  }
+
+  ArgumentList(node) {
+    if (node.children.length === 1) {
+      let result = this.evaluate(node.children[0])
+      if (result instanceof Reference) {
+        return result.get()
+      }
+      return [result]
+    } else {
+      let result = this.evaluate(node.children[2])
+      if (result instanceof Reference) {
+        result = result.get();
+      }
+      return this.evaluate(node.children[0]).concat(result)
+    }
   }
 
   BooleanLiteral(node) {

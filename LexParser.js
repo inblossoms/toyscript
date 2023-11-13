@@ -65,7 +65,7 @@ let reg = new XRegExp(
     BooleanLiteral: /true|false/,
     NullLiteral: /null/,
     Punctuator:
-      /\|\||\&\&|\=\=|\=\>|\+\+|\-\-|\-|\+|\:|\(|\=|\<|\>|\]|\[|\*|\)|\{|\}|\?|\.|;|\/|\'|\"/,
+      /\|\||\&\&|\=\=|\=\>|\+\+|\-\-|\-|\+|\:|\(|\=|\<|\>|\]|\[|\*|\)|\{|\}|\?|\.|;|\/|\'|\"|\,/,
     Keywords:
       /let|const|var|break|case|catch|continue|default|delete|do|else|finally|for|function|if|in|instanceof|new|return|switch|this|throw|try|typeof|void|while|with|yield/,
     Identifier: /[a-zA-Z_$][a-zA-Z0-9_$]*/,
