@@ -125,3 +125,22 @@ a;
 
 ```
 
+
+8.  function declaration and call
+```js
+// log(); method is equivalent to console.log();
+let x;
+x = 1;
+function a(){
+  log(x);
+}
+{
+  let x;
+  x = 2;
+  a();
+}
+
+// or
+
+log(1, 2, 3);
+```
