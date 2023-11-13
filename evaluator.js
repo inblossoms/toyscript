@@ -49,30 +49,30 @@ export class Evaluator {
     return this.evaluate(node.children[0]);
   }
 
-  IfStatement(node){
+  IfStatement(node) {
     let condition = this.evaluate(node.children[2]);
-    if(condition.property === "undefined" || condition.property === "NaN"){
+    if (condition.property === 'undefined' || condition.property === 'NaN') {
       return new JsUndefined().toBoolean();
     }
-    if(condition instanceof  Reference){
+    if (condition instanceof Reference) {
       condition = condition.get()
     }
-    if(condition.toBoolean().value){
+    if (condition.toBoolean().value) {
       return this.evaluate(node.children[4])
     }
   }
 
-  WhileStatement(node){
-    while(true){
+  WhileStatement(node) {
+    while (true) {
       let condition = this.evaluate(node.children[2]);
-      if(condition.property === "undefined" || condition.property === "NaN"){
+      if (condition.property === 'undefined' || condition.property === 'NaN') {
         return new JsUndefined().toBoolean();
       }
-      if(condition instanceof  Reference){
+      if (condition instanceof Reference) {
         condition = condition.get()
       }
-      if(condition.toBoolean().value){
-         this.evaluate(node.children[4])
+      if (condition.toBoolean().value) {
+        this.evaluate(node.children[4])
       } else {
         break;
       }
@@ -95,35 +95,35 @@ export class Evaluator {
 
   AdditiveExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    else  {
+    else {
       let left = this.evaluate(node.children[0]),
-       right = this.evaluate(node.children[2]);
-      if(left instanceof Reference) left = left.get();
-      if(right instanceof Reference) right = left.get();
+        right = this.evaluate(node.children[2]);
+      if (left instanceof Reference) left = left.get();
+      if (right instanceof Reference) right = left.get();
 
-       if(node.children[1].type === "+"){
-         return left + right;
-       }
-       if(node.children[1].type === "-"){
-         return new JsNumber(left.value - right.value);
-       }
+      if (node.children[1].type === '+') {
+        return new JsNumber(left.value + right.value);
+      }
+      if (node.children[1].type === '-') {
+        return new JsNumber(left.value - right.value);
+      }
     }
   }
 
   MultiplicativeExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    else  {
+    else {
       let left = this.evaluate(node.children[0]),
         right = this.evaluate(node.children[2]);
-      if(left instanceof Reference) left = left.get();
-      if(right instanceof Reference) right = left.get();
+      if (left instanceof Reference) left = left.get();
+      if (right instanceof Reference) right = left.get();
 
-      if(node.children[1].type === "*"){
-        return left * right;
+      if (node.children[1].type === '*') {
+        return new JsNumber(left.value * right.value);
       }
-      // if(node.children[1].type === "\"){
-      //   return left \ right;
-      // }
+      if(node.children[1].type === "\/"){
+        return new JsNumber((left.value) / (right.value));
+      }
     }
   }
 
@@ -134,6 +134,7 @@ export class Evaluator {
   Literal(node) {
     return this.evaluate(node.children[0]);
   }
+
   NumericLiteral(node) {
     let str = node.value,
       len = str.length,
@@ -154,14 +155,14 @@ export class Evaluator {
     while (len--) {
       // 处理 16 进制
       let char = str.charCodeAt(str.length - len - 1);
-      if (char >= "a".charCodeAt(0) && char <= "f".charCodeAt(0)) {
-        char = char - "a".charCodeAt(0) + 10;
-      } else if (char >= "A".charCodeAt(0) && char <= "F".charCodeAt(0)) {
-        char = char - "A".charCodeAt(0) + 10;
-      } else if (char >= "0".charCodeAt(0) && char <= "9".charCodeAt(0)) {
-        char -= "0".charCodeAt(0);
+      if (char >= 'a'.charCodeAt(0) && char <= 'f'.charCodeAt(0)) {
+        char = char - 'a'.charCodeAt(0) + 10;
+      } else if (char >= 'A'.charCodeAt(0) && char <= 'F'.charCodeAt(0)) {
+        char = char - 'A'.charCodeAt(0) + 10;
+      } else if (char >= '0'.charCodeAt(0) && char <= '9'.charCodeAt(0)) {
+        char -= '0'.charCodeAt(0);
       } else {
-        throw new Error("Invalid or unexpected token");
+        throw new Error('Invalid or unexpected token');
       }
 
       // 将数字字符转换为其对应的数字值
@@ -170,13 +171,14 @@ export class Evaluator {
 
     return new JsNumber(node.value)
   }
+
   StringLiteral(node) {
     const result = [];
     console.log(node.value);
 
     for (let i = 1, len = node.value.length - 1; i < len; i++) {
       switch (node.value[i]) {
-        case "\\":
+        case '\\':
           ++i;
           const char = node.value[i],
             escapeCharMap = {
@@ -188,9 +190,9 @@ export class Evaluator {
               f: String.fromCharCode(0x000c),
               v: String.fromCharCode(0x000b),
               0: String.fromCharCode(0x0000),
-              "\\": String.fromCharCode(0x005c),
-              "'": String.fromCharCode(0x0027),
-              '"': String.fromCharCode(0x0022),
+              '\\': String.fromCharCode(0x005c),
+              '\'': String.fromCharCode(0x0027),
+              '"': String.fromCharCode(0x0022)
             };
           if (char in escapeCharMap) {
             result.push(escapeCharMap[char]);
@@ -206,6 +208,7 @@ export class Evaluator {
     // console.log(result);
     return new JsString(result);
   }
+
   ObjectLiteral(node) {
     const len = node.children.length;
     if (len === 2) {
@@ -218,6 +221,7 @@ export class Evaluator {
       return object;
     }
   }
+
   PropertyList(node, object) {
     if (node.children.length === 1) {
       this.Property(node.children[0], object);
@@ -226,20 +230,22 @@ export class Evaluator {
       this.Property(node.children[2], object);
     }
   }
+
   Property(node, object) {
     let name;
-    if (node.children[0].type === "Identifier") {
+    if (node.children[0].type === 'Identifier') {
       name = node.children[0].name;
-    } else if (node.children[0].type === "StringLiteral") {
+    } else if (node.children[0].type === 'StringLiteral') {
       name = this.evaluate(node.children[0]);
     }
     object.setProperty(name, {
       value: this.evaluate(node.children[2]),
       writeable: true,
       enumerable: true,
-      configurable: true,
+      configurable: true
     });
   }
+
   AssignmentExpression(node) {
     if (node.children.length === 1) {
       return this.evaluate(node.children[0]);
@@ -249,26 +255,35 @@ export class Evaluator {
     let right = this.evaluate(node.children[2]);
     left.set(right);
   }
+
   LogicalORExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
     const res = this.evaluate(node.children[0]);
-    if (res) return res;
+    if (res.value) return res.value;
+    if (res.type === 'null' || res.property === 'undefined') {
+      return this.evaluate(node.children[2]);
+    }
     return this.evaluate(node.children[2]);
   }
+
   LogicalANDExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
     const res = this.evaluate(node.children[0]);
-    if (!res) return res;
+    if (!res.value) return res.value;
+    if (res.type === 'null') return null;
+    if (res.property === 'undefined') return undefined;
     return this.evaluate(node.children[2]);
   }
+
   LeftHandSideExpression(node) {
     return this.evaluate(node.children[0]);
   }
+
   NewExpression(node) {
     if (node.children.length === 1) {
       return this.evaluate(node.children[0]);
     }
-    if(node.children.length === 2){
+    if (node.children.length === 2) {
       let _class = this.evaluate(node.children[1]);
       return _class.constructor()
     }
@@ -282,11 +297,12 @@ export class Evaluator {
     * return object;
     */
   }
+
   CallExpression(node) {
-    if(node.children.length === 1) {
+    if (node.children.length === 1) {
       return this.evaluate(node.children[0]);
     }
-    if(node.children.length === 2){
+    if (node.children.length === 2) {
       let _function = this.evaluate(node.children[0]),
         _arguments = this.evaluate(node.children[1])
 
@@ -302,39 +318,42 @@ export class Evaluator {
     * return object;
     */
   }
+
   MemberExpression(node) {
-    if(node.children.length === 1) {
+    if (node.children.length === 1) {
       return this.evaluate(node.children[0]);
     }
-    debugger
-    if(node.children.length === 3){
+    if (node.children.length === 3) {
       const result = this.evaluate(node.children[0]).get(),
-       prop = result.properties.get(node.children[2].name);
-      if ("value" in prop) return prop.value
-      if ("get" in prop) return prop.get.call(result)
+        prop = result.properties.get(node.children[2].name);
+      if ('value' in prop) return prop.value
+      if ('get' in prop) return prop.get.call(result)
     }
   }
+
   Identifier(node) {
     // 将变量存储到 ExecutionContext
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
     return new Reference(runningEC.lexicalEnvironment, node.name);
   }
-  BooleanLiteral(node){
-    if(node.value === "true"){
+
+  BooleanLiteral(node) {
+    if (node.value === 'true') {
       return new JsBoolean(true)
-    }
-    else if(node.value === "false"){
+    } else if (node.value === 'false') {
       return new JsBoolean(false)
     }
   }
-  NullLiteral(node){
-    if(typeof node.value === "object") {
+
+  NullLiteral(node) {
+    if (typeof node.value === 'object') {
       return new JsNull()
     }
   }
-  BlockStatement(node){
+
+  BlockStatement(node) {
     debugger
-    if(node.children.length === 2) return;
+    if (node.children.length === 2) return;
     return this.evaluate(node.children[1]);
   }
 }
