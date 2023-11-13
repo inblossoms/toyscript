@@ -10,7 +10,8 @@ import {
   JsNumber,
   JsString,
   JsBoolean,
-  CompletionRecord
+  CompletionRecord,
+  ObjectEnvironmentRecord
 } from './runtime.js';
 
 export class Evaluator {
@@ -18,8 +19,12 @@ export class Evaluator {
     this.realm = new Realm();
     // 执行上下文中的数据状态 在函数调用的时候切换
     // 通过栈来管理 ExecutionContext 在存储函数调用的先后时机
-    this.globalObject = {};
-    this.ecs = [new ExecutionContext(this.realm, this.globalObject)];
+    this.globalObject = new JsObject();
+    this.ecs = [new ExecutionContext(
+      this.realm,
+      new ObjectEnvironmentRecord(this.globalObject),
+      new ObjectEnvironmentRecord(this.globalObject)
+    )];
   }
 
   evaluate(node) {
@@ -41,7 +46,7 @@ export class Evaluator {
       default:
         // StatementList: [["Statement"], ["StatementList", "Statement"]],
         const record = this.evaluate(node.children[0]);
-        if(record.type === "normal"){
+        if (record.type === 'normal') {
           return this.evaluate(node.children[1]);
         }
         return record;
@@ -76,35 +81,39 @@ export class Evaluator {
       }
       if (condition.toBoolean().value) {
         let record = this.evaluate(node.children[4])
-        if(record.type === "continue"){
+        if (record.type === 'continue') {
           continue;
           // TODO
-        } else if(record.type === "break"){
-          return new CompletionRecord("normal"); // break 代表着循环截止了 否则一个 break 会截停多层循环了
+        } else if (record.type === 'break') {
+          return new CompletionRecord('normal'); // break 代表着循环截止了 否则一个 break 会截停多层循环了
         }
       } else {
-        return new CompletionRecord("normal");
+        return new CompletionRecord('normal');
       }
     }
   }
 
-  BreakStatement(node){
-    return new CompletionRecord("break")
+  BreakStatement(node) {
+    return new CompletionRecord('break')
   }
 
-  ContinueStatement(node){
-    return new CompletionRecord("continue")
+  ContinueStatement(node) {
+    return new CompletionRecord('continue')
   }
 
   VariableDeclaration(node) {
     // log(node) 获取表达式声明体
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
-    runningEC.variableEnvironment[node.children[1].name] = new JsUndefined();
-    return new CompletionRecord("normal", new JsUndefined());
+    runningEC.variableEnvironment.add(node.children[1].name);
+    return new CompletionRecord('normal', new JsUndefined());
   }
 
   ExpressionStatement(node) {
-    return new CompletionRecord("normal", this.evaluate(node.children[0]));
+    let result = this.evaluate(node.children[0])
+    if(result instanceof Reference){
+      result = result.get()
+    }
+    return new CompletionRecord('normal', result);
   }
 
   Expression(node) {
@@ -117,7 +126,7 @@ export class Evaluator {
       let left = this.evaluate(node.children[0]),
         right = this.evaluate(node.children[2]);
       if (left instanceof Reference) left = left.get();
-      if (right instanceof Reference) right = left.get();
+      if (right instanceof Reference) right = right.get();
 
       if (node.children[1].type === '+') {
         return new JsNumber(left.value + right.value);
@@ -139,7 +148,7 @@ export class Evaluator {
       if (node.children[1].type === '*') {
         return new JsNumber(left.value * right.value);
       }
-      if(node.children[1].type === "\/"){
+      if (node.children[1].type === '\/') {
         return new JsNumber((left.value) / (right.value));
       }
     }

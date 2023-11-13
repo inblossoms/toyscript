@@ -2,10 +2,20 @@
 
 <script src="./run.js" type='module'></script>
 <textarea id="sourceInp"cols="50" rows="20">
-  a = 3;
-  while(a){
-    a = a - 1;
+{
+  let a;
+  a = 1;
+  {
+    let b;
+    a = a + 1;
+    b = 10;
+    {
+      b =  b / 2;
+    }
   }
-  a;
+}
+let c;
+c = a + b;
+c;
 </textarea>
 <button id='btn'>run</button>

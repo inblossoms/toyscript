@@ -96,3 +96,22 @@ while(a){
 }
 a;
 ```
+7. scope chain(prototype chain)
+```js
+{
+  let a;
+  a = 1;
+  {
+    let b;
+    a = a + 1;
+    b = 10;
+    {
+      b =  b / 2;
+    }
+  }
+}
+let c;
+c = a + b;
+c;
+
+```
