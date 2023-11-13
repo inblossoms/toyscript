@@ -91,7 +91,7 @@ while(a){
 // or
 while(a){
   a = a - 1;
-  continue;
+  continue; // or break;
   a = a - 100;
 }
 a;
