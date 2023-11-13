@@ -9,7 +9,15 @@ const syntaxMap = {
       ["WhileStatement"],
       ["VariableDeclaration"],
       ["FunctionDeclaration"],
-      ["BlockStatement"]
+      ["BlockStatement"],
+      ["BreakStatement"],
+      ["ContinueStatement"]
+    ],
+    BreakStatement: [
+      ["break", ";"]
+    ],
+    ContinueStatement: [
+      ["continue", ";"]
     ],
     BlockStatement: [
       ["{", "StatementList", "}"],

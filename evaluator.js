@@ -9,7 +9,8 @@ import {
   JsUndefined,
   JsNumber,
   JsString,
-  JsBoolean
+  JsBoolean,
+  CompletionRecord
 } from './runtime.js';
 
 export class Evaluator {
@@ -39,9 +40,11 @@ export class Evaluator {
         return this.evaluate(node.children[0]);
       default:
         // StatementList: [["Statement"], ["StatementList", "Statement"]],
-        // 第二种情况就全部执行一下
-        this.evaluate(node.children[0]);
-        return this.evaluate(node.children[1]);
+        const record = this.evaluate(node.children[0]);
+        if(record.type === "normal"){
+          return this.evaluate(node.children[1]);
+        }
+        return record;
     }
   }
 
@@ -72,21 +75,36 @@ export class Evaluator {
         condition = condition.get()
       }
       if (condition.toBoolean().value) {
-        this.evaluate(node.children[4])
+        let record = this.evaluate(node.children[4])
+        if(record.type === "continue"){
+          continue;
+          // TODO
+        } else if(record.type === "break"){
+          return new CompletionRecord("normal"); // break 代表着循环截止了 否则一个 break 会截停多层循环了
+        }
       } else {
-        break;
+        return new CompletionRecord("normal");
       }
     }
+  }
+
+  BreakStatement(node){
+    return new CompletionRecord("break")
+  }
+
+  ContinueStatement(node){
+    return new CompletionRecord("continue")
   }
 
   VariableDeclaration(node) {
     // log(node) 获取表达式声明体
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
-    return runningEC.variableEnvironment[node.children[1].name] = new JsUndefined();
+    runningEC.variableEnvironment[node.children[1].name] = new JsUndefined();
+    return new CompletionRecord("normal", new JsUndefined());
   }
 
   ExpressionStatement(node) {
-    return this.evaluate(node.children[0]);
+    return new CompletionRecord("normal", this.evaluate(node.children[0]));
   }
 
   Expression(node) {
@@ -352,7 +370,6 @@ export class Evaluator {
   }
 
   BlockStatement(node) {
-    debugger
     if (node.children.length === 2) return;
     return this.evaluate(node.children[1]);
   }

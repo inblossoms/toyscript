@@ -199,3 +199,10 @@ export class EnvironmentRecord {
   }
 }
 
+export class CompletionRecord {
+  constructor(type, value, target) {
+    this.type = type || "normal";
+    this.value = value || new JsUndefined;
+    this.target = target || null;
+  }
+}
