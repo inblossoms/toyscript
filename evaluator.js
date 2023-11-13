@@ -104,13 +104,13 @@ export class Evaluator {
   VariableDeclaration(node) {
     // log(node) 获取表达式声明体
     let runningEC = this.ecs[this.ecs.length - 1]; // 取栈顶
-    runningEC.variableEnvironment.add(node.children[1].name);
+    runningEC.lexicalEnvironment.add(node.children[1].name);
     return new CompletionRecord('normal', new JsUndefined());
   }
 
   ExpressionStatement(node) {
     let result = this.evaluate(node.children[0])
-    if(result instanceof Reference){
+    if (result instanceof Reference) {
       result = result.get()
     }
     return new CompletionRecord('normal', result);
@@ -380,6 +380,17 @@ export class Evaluator {
 
   BlockStatement(node) {
     if (node.children.length === 2) return;
-    return this.evaluate(node.children[1]);
+
+    let runningEC = this.ecs[this.ecs.length - 1],
+      ec = new ExecutionContext(
+        runningEC.realm,
+        new EnvironmentRecord(runningEC.lexicalEnvironment),
+        runningEC.variableEnvironment
+      );
+    this.ecs.push(ec);
+    let result = this.evaluate(node.children[1]);
+    this.ecs.pop();
+
+    return result;
   }
 }

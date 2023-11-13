@@ -96,7 +96,7 @@ while(a){
 }
 a;
 ```
-7. scope chain(prototype chain)
+7. block scope chain
 ```js
 {
   let a;
@@ -110,8 +110,18 @@ a;
     }
   }
 }
-let c;
-c = a + b;
-c;
+// 此时无法在外部访问 a 和 b
+
+// or
+{
+  let a;
+  a = 1;
+  {
+    let a;
+    a = 100;
+  }
+  a; // 1
+}
 
 ```
+
