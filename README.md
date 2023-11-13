@@ -74,7 +74,7 @@ if(a) a = 2;
 // or
 if(a) {
   a = 2;
-};
+}
 a;
 ```
 6. loop logic
