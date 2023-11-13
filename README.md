@@ -88,5 +88,11 @@ while(a)
 while(a){
   a = a - 1;
 }
+// or
+while(a){
+  a = a - 1;
+  continue;
+  a = a - 100;
+}
 a;
 ```
