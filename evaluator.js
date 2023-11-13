@@ -233,7 +233,7 @@ export class Evaluator {
     } else if (node.children[0].type === "StringLiteral") {
       name = this.evaluate(node.children[0]);
     }
-    object.set(name, {
+    object.setProperty(name, {
       value: this.evaluate(node.children[2]),
       writeable: true,
       enumerable: true,
@@ -309,7 +309,7 @@ export class Evaluator {
     debugger
     if(node.children.length === 3){
       const result = this.evaluate(node.children[0]).get(),
-       prop = result.get(node.children[2].name);
+       prop = result.properties.get(node.children[2].name);
       if ("value" in prop) return prop.value
       if ("get" in prop) return prop.get.call(result)
     }
@@ -327,11 +327,14 @@ export class Evaluator {
       return new JsBoolean(false)
     }
   }
-
   NullLiteral(node){
-    debugger
     if(typeof node.value === "object") {
       return new JsNull()
     }
+  }
+  BlockStatement(node){
+    debugger
+    if(node.children.length === 2) return;
+    return this.evaluate(node.children[1]);
   }
 }

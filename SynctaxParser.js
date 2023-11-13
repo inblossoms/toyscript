@@ -9,6 +9,11 @@ const syntaxMap = {
       ["WhileStatement"],
       ["VariableDeclaration"],
       ["FunctionDeclaration"],
+      ["BlockStatement"]
+    ],
+    BlockStatement: [
+      ["{", "StatementList", "}"],
+      ["{", "}"]
     ],
     IfStatement: [
       ["if", "(", "Expression", ")", "Statement"]
