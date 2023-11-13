@@ -11,7 +11,7 @@ const syntaxMap = {
       ['FunctionDeclaration'],
       ['BlockStatement'],
       ['BreakStatement'],
-      ['ContinueStatement']
+      ['ContinueStatement'],
     ],
     BreakStatement: [
       ['break', ';']

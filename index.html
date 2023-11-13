@@ -2,18 +2,15 @@
 
 <script src="./run.js" type='module'></script>
 <textarea id="sourceInp"cols="50" rows="20">
+let x;
+x = 1;
+function a(){
+  log(x);
+}
 {
-  let a;
-  a = 1;
-  {
-    let b;
-    b = 10;
-    {
-      b =  b / 2;
-    }
-    a = a + b;
-  }
-  a;
+  let x;
+  x = 2;
+  a();
 }
 </textarea>
 <button id='btn'>run</button>

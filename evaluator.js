@@ -28,6 +28,21 @@ export class Evaluator {
     this.log()
   }
 
+  evaluateModule(node) {
+    let globalEC = this.ecs[0],
+      ec = new ExecutionContext(
+        this.realm,
+        new EnvironmentRecord(globalEC.lexicalEnvironment),
+        new EnvironmentRecord(globalEC.lexicalEnvironment)
+      );
+
+    this.ecs.push(ec)
+    let result = this.valueOf(node)
+    this.ecs.pop()
+
+    return result;
+  }
+
   log() {
     this.globalObject.set('log', new JsObject());
     this.globalObject.get('log').call = args => {
@@ -48,16 +63,14 @@ export class Evaluator {
   }
 
   StatementList(node) {
-    switch (node.children.length) {
-      case 1:
-        return this.evaluate(node.children[0]);
-      default:
-        // StatementList: [["Statement"], ["StatementList", "Statement"]],
-        const record = this.evaluate(node.children[0]);
-        if (record.type === 'normal') {
-          return this.evaluate(node.children[1]);
-        }
-        return record;
+    if (node.children.length === 1) {
+      return this.evaluate(node.children[0]);
+    } else {
+      const record = this.evaluate(node.children[0]);
+      if (record.type === 'normal') {
+        return this.evaluate(node.children[1]);
+      }
+      return record;
     }
   }
 
@@ -340,7 +353,7 @@ export class Evaluator {
     if (node.children.length === 2) {
       let _function = this.evaluate(node.children[0]),
         _arguments = this.evaluate(node.children[1]);
-      if(_function instanceof Reference){
+      if (_function instanceof Reference) {
         _function = _function.get();
       }
       return _function.call(_arguments)
@@ -426,5 +439,28 @@ export class Evaluator {
     this.ecs.pop();
 
     return result;
+  }
+
+  FunctionDeclaration(node) {
+    let name = node.children[1].name,
+      code = node.children[node.children.length - 2],
+      func = new JsObject();
+
+    func.call = (args) => {
+      let ec = new ExecutionContext(
+        this.realm,
+        new EnvironmentRecord(func.environment),
+        new EnvironmentRecord(func.environment)
+      );
+      this.ecs.push(ec);
+      this.evaluate(code);
+      this.ecs.pop();
+    }
+
+    let runningEC = this.ecs[this.ecs.length - 1];
+    runningEC.lexicalEnvironment.add(name)
+    runningEC.lexicalEnvironment.set(name, func)
+    func.environment = runningEC.lexicalEnvironment
+    return new CompletionRecord('normal')
   }
 }
