@@ -1,0 +1,16 @@
+<head><script defer src="bundle.js"></script></head><!DOCTYPE html>
+
+<script src="./run.js" type='module'></script>
+<textarea id="sourceInp"cols="50" rows="20">
+let x;
+x = 1;
+function a(){
+  log(x);
+}
+{
+  let x;
+  x = 2;
+  a();
+}
+</textarea>
+<button id='btn'>run</button>
