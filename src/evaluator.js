@@ -308,20 +308,20 @@ export class Evaluator {
 
   LogicalORExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    const res = this.evaluate(node.children[0]);
+    let res = this.evaluate(node.children[0]);
     if (res.value) return res.value;
-    if (res.type === "null" || res.property === "undefined") {
-      return this.evaluate(node.children[2]);
-    }
+    res = this.evaluate(node.children[2]);
+    if (res.type === "null") return new JsNull();
+    if (res.property === "undefined") return new JsUndefined();
     return this.evaluate(node.children[2]);
   }
 
   LogicalANDExpression(node) {
     if (node.children.length === 1) return this.evaluate(node.children[0]);
-    const res = this.evaluate(node.children[0]);
+    let res = this.evaluate(node.children[0]);
+    if (res.type === "null") return new JsNull();
+    if (res.property === "undefined") return new JsUndefined();
     if (!res.value) return res.value;
-    if (res.type === "null") return null;
-    if (res.property === "undefined") return undefined;
     return this.evaluate(node.children[2]);
   }
 
