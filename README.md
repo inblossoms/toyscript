@@ -6,7 +6,7 @@ the language can reach the Turing-complete state.**
 > toy-js will be based on our own custom semantics in the `Language.md`.
 >
 > You need to have some understanding of the lexical definition of computer language before you can
-> understand the program, of course `Language.md` may also help you.
+> understand the program, you can also use [MDN - lexical grammar](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Lexical_grammar) to increase your understanding. of course `Language.md` may also help you.
 
 **Tip:** You should test by adhering to the content of the code block, otherwise unexpected errors will occur.
 These bugs are often features that are not currently implemented.
