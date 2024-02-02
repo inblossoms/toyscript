@@ -1,4 +1,7 @@
 ## Language learning methodology
+
+#### In fact, what I want to express is that the logic behind the language is the same, and we can use any language to achieve everything we want to express in this repo.
+
 **In a computer language, as long as there are three kinds of logic,
 sequential execution logic, branch logic and loop logic,
 the language can reach the Turing-complete state.**
